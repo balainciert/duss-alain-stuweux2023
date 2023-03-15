@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            margin: 40px;
+        }
+
+        .wrapper {
+            display: grid;
+            grid-template-columns: 100px 100px 100px;
+            grid-gap: 10px;
+        }
+
+        .box {
+            background-color: rgb(225, 225, 225);
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 150%;
+        }
+
+        .mine {
+            background-color: pink;
+        }
+
+        .yours {
+            background-color: rgb(15, 15, 97);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+
+    </div>
+    <div class="hidden yourTurn">It's your turn</div>
+    <div class="wait">Wait for the other player</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = io();
+        let myTurn = false;
+        let myTurnIndicator = document.querySelector(".yourTurn");
+        let waitIndicator = document.querySelector(".wait");
+
+
+        socket.on("click", index => {
+            console.log("data received: " + index);
+            let wrapper = document.querySelector(".wrapper");
+            let boxes = Array.from(wrapper.children);
+            boxes[index].classList.add("yours");
+            myTurn = true;
+            myTurnIndicator.classList.toggle("hidden");
+            waitIndicator.classList.toggle("hidden");
+        });
+
+        socket.on("turn", myTurnFromServer => {
+            myTurn = myTurnFromServer;
+            myTurnIndicator.classList.toggle("hidden");
+            waitIndicator.classList.toggle("hidden");
+        });
+
+        document.querySelectorAll(".box").forEach(box => {
+            box.addEventListener("click", event => {
+                if (myTurn) {
+                    let parent = event.target.parentNode;
+                    let index = Array.from(parent.children).indexOf(event.target);
+                    event.target.classList.add("mine");
+                    socket.emit("click", index);
+                    myTurn = false;
+                    myTurnIndicator.classList.toggle("hidden");
+                    waitIndicator.classList.toggle("hidden");
+                }
+                else {
+                    console.log("Not your turn");
+                }
+            })
+        });
+    </script>
+</body>
+
+</html>
